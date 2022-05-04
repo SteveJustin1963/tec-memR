@@ -1,5 +1,6 @@
 # tec-memR
-tec1 and memristor crossbar matrix for NN, AI, etc
+- for NN, AI, etc, using memristor crossbar matrix /array 
+
 
 ![](https://github.com/SteveJustin1963/tec-memR/blob/main/pics/memR-NN.png)
 ![](https://github.com/SteveJustin1963/tec-memR/blob/main/pics/Neural-network-implementation-using-memristor-crossbar-arrays-a-shows-a-conventional.png)
