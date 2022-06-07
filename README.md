@@ -1,5 +1,15 @@
 # tec-memR
+- memristor
+![download](https://user-images.githubusercontent.com/58069246/172303311-34beab6a-afed-4aa9-b656-d7a765cd697c.png)
+![download](https://user-images.githubusercontent.com/58069246/172303379-81965820-a7c8-481a-93e4-be1e358269ad.png)
+
+
+
+
+
+
 - for NN, AI, etc, using memristor crossbar matrix /array 
+
 
 
 ![](https://github.com/SteveJustin1963/tec-memR/blob/main/pics/memR-NN.png)
