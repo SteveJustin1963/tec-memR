@@ -10,7 +10,8 @@
 
 
 - for NN, AI, etc, using memristor crossbar matrix /array 
-  ![download](https://user-images.githubusercontent.com/58069246/172303581-0c4dcfce-4fb0-484d-b76b-7117976cbdef.png)
+
+![fnano-03-645995-g008](https://user-images.githubusercontent.com/58069246/172303663-d39ec456-fd6d-4e3e-a88e-cc624d0b9dcd.jpg)
 
 
 
