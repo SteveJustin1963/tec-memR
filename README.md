@@ -3962,6 +3962,7 @@ To "detect" the output (e.g., classify based on phase interference):
   - Ellipse: Intermediate—calculate φ using: φ = ± arcsin(Y_{x=0} / Y_{max}), where Y_{max} is max vertical extent, Y_{x=0} is vertical at x=0 crossing. Add 180° if ellipse tilts left. (For top in quadrant 2: 180° - arcsin.)
   - Example: If Y_{max} = 2V, Y_{x=0} = 1V, φ ≈ ±30° (or 150° if tilted).
 
+<img width="250" height="187" alt="image" src="https://github.com/user-attachments/assets/0b56666a-57ab-4559-a68d-e86d24f080b0" />
 
 
 
@@ -3977,6 +3978,8 @@ Loaded phase 180° → Detected: -179.64°
 
 This mimics a simple "computation"—e.g., if loaded phases represent inputs, the detected shift could threshold to logic outputs (near 0° = TRUE, near 180° = FALSE).
 
+<img width="1280" height="720" alt="image" src="https://github.com/user-attachments/assets/76d95b00-e308-46b1-9ef5-5661051f534e" />
+<img width="423" height="280" alt="image" src="https://github.com/user-attachments/assets/daf4fbf1-f5a3-4f2b-a52a-429146c53e62" />
 
 
 
