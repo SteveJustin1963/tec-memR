@@ -1091,6 +1091,1039 @@ The resistance value doesn't change during the AC cycle - it was programmed earl
 
 **Bottom Line:** The copper-sulfide memristor can absolutely handle kHz-range AC signals for phase computation. The "slow" ion migration only matters during training (weight updates), not during inference. For inference, the memristor acts as a fast, passive phase-shifting element that responds instantly to AC signals in the 1-10 kHz range.
 
+---
+
+#### Deep Dive: AC Signal Behavior in Memristors
+
+**Understanding Frequency-Dependent Memristive Behavior**
+
+When an alternating current (AC) signal is applied to a memristor at angular frequency ω (equivalent to f = ω / 2π in Hertz), the device's behavior arises from its history-dependent resistance, or **memristance**, which varies based on the net charge that has flowed through it.
+
+**What Happens When AC is Applied:**
+
+**Basic Operation Under AC:**
+
+The memristor's voltage-current (V-I) relationship is nonlinear and exhibits a characteristic **"pinched hysteresis loop"** when plotted on a V-I plane.
+
+For an AC input like `v(t) = V₀ sin(ωt)`, the current is:
+```
+i(t) = v(t) / M(q(t))
+```
+where:
+- `M` is the memristance (time-varying resistance)
+- `q(t)` is the time-dependent charge: q(t) = ∫ i dt
+
+**Key characteristic:** This loop is always **pinched at the origin** (V=0, I=0), a hallmark of ideal memristors, representing the device's memory effect—the resistance depends on past current flow.
+
+**Frequency-Dependent Behavior:**
+
+The behavior dramatically changes with frequency, divided into three regimes:
+
+**1. Low Frequencies (ω << ω₀) - "Memory Mode"**
+
+- **Hysteresis loop**: Wide and pronounced
+- **Physical behavior**: Memristance changes **significantly** over each AC cycle
+- **Why**: There's enough time for charge to accumulate and alter the internal state
+  - In metal-oxide memristors (TiO₂): Dopant drift occurs
+  - In copper-sulfide: Cu⁺ ion migration happens
+- **Applications**:
+  - Neuromorphic computing (exploits memory)
+  - Non-volatile memory
+  - Pattern recognition
+- **Power dissipation**: P(t) = i²(t) · M(q(t)) with variable M
+- **Our use case**: NOT suitable - we want fixed resistance during inference!
+
+**2. Moderate Frequencies (ω ≈ ω₀) - "Transition Mode"**
+
+- **Hysteresis loop**: Starts to shrink in area
+- **Physical behavior**: Change in charge per cycle **decreases**
+- **Why**: Partial state changes occur, but not complete switching
+- **Characteristic**: Blending of memory effects with resistive behavior
+- **Applications**:
+  - Frequency-dependent filters
+  - Chaotic oscillators
+  - Weakly nonlinear circuits
+- **This is the "danger zone"** for phase computing - unpredictable behavior!
+
+**3. High Frequencies (ω >> ω₀) - "Fixed Resistor Mode"**
+
+- **Hysteresis loop**: Collapses into a nearly **straight line** through the origin
+- **Physical behavior**: Memristor acts like a **linear resistor**
+- **Why**: The internal state changes **negligibly** per cycle due to rapid oscillations
+- **Memristance**: Close to its initial or average value (FIXED)
+- **Power dissipation**: P(t) = i²(t) · R_avg (like Joule heating in a normal resistor)
+- **Applications**:
+  - **Phase-shifting elements** (our application!)
+  - High-frequency analog circuits
+  - Signal processing
+- **Our use case**: IDEAL - memristor is stable, acts as passive phase shifter!
+
+**The Characteristic Frequency (ω₀):**
+
+The critical frequency ω₀ determines the transition between modes. In HP's linear drift model:
+
+```
+ω₀ = μᵥ · R_ON / D²
+```
+
+where:
+- `μᵥ` = ion mobility (material-dependent)
+- `R_ON` = low-resistance state (e.g., 10 kΩ)
+- `D` = device thickness (e.g., 10 nm for oxide, ~100 nm for copper-sulfide)
+
+**Typical values:**
+- Professional TiO₂ memristors: ω₀ ~ 1-100 kHz
+- DIY copper-sulfide memristors: ω₀ ~ 100 Hz - 1 kHz (thicker, slower ions)
+- Advanced ReRAM: ω₀ ~ 1-10 MHz
+
+**For our phase computing application:**
+- We operate at **1-10 kHz** (audio frequencies)
+- Our DIY memristors have **ω₀ ~ 100-500 Hz**
+- Therefore: **ω >> ω₀** → Fixed resistor mode ✓
+- This is EXACTLY what we want for stable phase shifts!
+
+**Key Limitations:**
+
+**1. Loss of Memory Effect at High Frequencies**
+
+Above ω₀ (e.g., ω = 10ω₀ or higher):
+- **Memory property diminishes** - the internal state barely changes before the signal reverses
+- **Switching becomes impossible** - can't program the memristor with AC at these frequencies
+- **Implication**: We MUST use DC pulses for programming, AC only for inference
+- **Not suitable for**: Ultra-high-speed switching applications without design modifications
+
+**2. Frequency Range Constraints**
+
+Real memristors (ReRAM, metal-oxide, copper-sulfide) show deviations from ideal models:
+
+**Very low frequencies (ω << ω₀):**
+- ✗ Leakage currents dominate
+- ✗ Stability issues (drift, noise)
+- ✗ State changes during inference (unwanted!)
+- **Example**: At 1 Hz, our copper-sulfide memristors would switch states during inference!
+
+**Moderate frequencies (ω ≈ ω₀):**
+- ✗ Nonlinear ionic drift causes distortion
+- ✗ Hysteresis loop may not cross zero perfectly
+- ✗ Incomplete switching leads to state ambiguity
+- ✗ Thermal noise becomes significant
+- **Example**: At 100-500 Hz, behavior is unpredictable
+
+**High frequencies (ω >> ω₀):**
+- ✓ Clean resistive behavior (GOOD for us!)
+- ✗ BUT: Parasitic effects emerge at very high ω:
+  - **Parasitic capacitance** (from device structure, ~pF)
+  - **Parasitic inductance** (from wiring, ~nH)
+  - **Skin effect** (at MHz+)
+- **Practical limit for DIY**: ~100 kHz (parasitic capacitance dominates)
+- **Professional devices**: Can reach GHz with careful design
+
+**Very high frequencies (ω >>> ω₀):**
+- ✗ Packaging parasitics dominate over memristor properties
+- ✗ Transmission line effects
+- ✗ Memristor becomes just a complex impedance
+
+**3. Practical and Modeling Limits**
+
+**Simulation challenges:**
+- High-frequency simulations require specialized methods (asymptotic expansions)
+- Standard circuit solvers struggle with rapid oscillations
+- Need adaptive timestep control
+
+**Experimental challenges:**
+- **Noninvasive AC perturbations** may not fully characterize device
+- Incomplete hysteresis due to measurement limits
+- Boundary effects in finite-size devices
+
+**Application constraints:**
+- **RF switches**: Frequency dependence restricts bandwidth
+- **Edge computing**: May need biasing or specific waveforms
+- **Neuromorphic systems**: Must design for specific frequency regime
+
+**Design Guidelines for Phase Computing:**
+
+Based on this analysis, here's how to choose operating frequencies:
+
+```
+For DIY Copper-Sulfide Memristors (ω₀ ~ 100-500 Hz):
+
+✓ OPTIMAL: 1-10 kHz (ω ≈ 10-100 × ω₀)
+  → Fixed resistor mode
+  → Stable phase shifts
+  → No state changes during inference
+  → Minimal parasitics
+
+⚠ BORDERLINE: 100-1000 Hz (ω ≈ 1-10 × ω₀)
+  → Partially memristive
+  → Unpredictable phase shifts
+  → Risk of state drift
+  → AVOID for precision applications
+
+✗ TOO LOW: <100 Hz (ω < ω₀)
+  → Full memristive switching
+  → State changes during inference
+  → Cannot maintain fixed weights
+  → UNUSABLE for phase computing
+
+✗ TOO HIGH: >100 kHz (ω > 1000 × ω₀)
+  → Parasitic capacitance dominates
+  → Phase shifts unpredictable
+  → Need professional PCB design
+  → DIFFICULT for DIY
+```
+
+**For Professional Devices (ω₀ ~ 1-100 kHz):**
+- Optimal range: 100 kHz - 10 MHz
+- Can achieve GHz operation with advanced packaging
+- Used in commercial photonic-electronic hybrid systems
+
+**Why This Matters for Our Project:**
+
+1. **Training (DC mode)**: We use DC pulses at ω = 0 (effectively) to program weights
+   - Operates in "full memory" mode
+   - Ion migration occurs
+   - State changes persist
+
+2. **Inference (AC mode)**: We use AC at 1-10 kHz for computation
+   - Operates in "fixed resistor" mode (ω >> ω₀)
+   - No ion migration
+   - State remains constant
+   - Clean phase shifts
+
+3. **Best of both worlds**: We exploit BOTH frequency regimes!
+   - Low frequency (DC) → programmable memory
+   - High frequency (AC) → stable computation
+
+**Experimental Verification:**
+
+To verify your memristor operates correctly:
+
+1. **Measure hysteresis loop** at various frequencies (1 Hz, 10 Hz, 100 Hz, 1 kHz, 10 kHz)
+2. **Observe the transition** from wide loop → narrow loop → straight line
+3. **Identify ω₀** where loop area is ~50% of low-frequency value
+4. **Choose operating frequency** at 10× ω₀ or higher
+5. **Verify phase stability** - should not drift during continuous AC operation
+
+**Material-Specific Considerations:**
+
+Different memristor types have different frequency characteristics:
+
+| Material | ω₀ (typical) | Best AC Range | DC Programming | Notes |
+|----------|--------------|---------------|----------------|-------|
+| Copper-Sulfide (DIY) | 100-500 Hz | 1-10 kHz | 1-10 ms pulses | Thicker, slower ions |
+| TiO₂ (Professional) | 1-100 kHz | 100 kHz - 1 MHz | 10-100 µs pulses | Faster, smaller device |
+| HfO₂ (Advanced) | 10 kHz - 1 MHz | 1-10 MHz | 1-10 µs pulses | Very fast switching |
+| Ag-Chalcogenide | 100 Hz - 10 kHz | 10-100 kHz | 100 µs - 1 ms | Medium speed |
+
+**Summary:**
+
+The frequency-dependent behavior of memristors is NOT a limitation for phase computing—it's actually what makes it work! By operating at ω >> ω₀, we ensure:
+
+- ✓ **Stable resistance** during inference
+- ✓ **Predictable phase shifts**
+- ✓ **No unwanted state changes**
+- ✓ **Clean interference patterns**
+
+While still allowing:
+- ✓ **DC programming** for weight updates
+- ✓ **Non-volatile storage**
+- ✓ **Adaptive learning**
+
+**Further Reading:**
+
+For deeper understanding, explore:
+- HP Labs memristor papers (Strukov et al., 2008)
+- Frequency response of ReRAM devices
+- Circuit simulations with SPICE models
+- Experimental characterization techniques (AC impedance spectroscopy)
+
+---
+
+#### How Frequency Limitations Affect Maximum Neuron Count
+
+**The Critical Question: Does frequency limit how many neurons we can have?**
+
+**Short Answer: YES! Frequency bandwidth directly limits the maximum number of parallel neurons through frequency division multiplexing.**
+
+**Understanding the Limitation:**
+
+The total number of neurons you can process **simultaneously** is limited by:
+
+```
+Maximum Neurons = Total Bandwidth / Bandwidth per Neuron
+```
+
+But there's more to it than simple division. Let's break it down:
+
+**1. Total System Bandwidth**
+
+This is determined by the **highest usable frequency** before parasitics dominate:
+
+| System Type | Max Frequency | Total Bandwidth | Limiting Factor |
+|-------------|---------------|-----------------|-----------------|
+| DIY Copper-Sulfide (Breadboard) | ~10 kHz | ~9 kHz usable | Breadboard capacitance |
+| DIY Copper-Sulfide (Protoboard) | ~100 kHz | ~99 kHz usable | Memristor parasitics |
+| Professional ReRAM (PCB) | ~10 MHz | ~9.9 MHz usable | Device packaging |
+| Advanced ReRAM (Custom PCB) | ~100 MHz | ~99 MHz usable | Trace inductance |
+
+**Why not start from 0 Hz?** Because we need ω >> ω₀ for stable operation!
+- Minimum frequency: ~10 × ω₀
+- For DIY memristors: ω₀ ~ 100-500 Hz → Min frequency ~ 1 kHz
+
+**Therefore:**
+- **Usable bandwidth** = Max frequency - Min frequency
+- DIY example: 100 kHz - 1 kHz = **99 kHz usable bandwidth**
+
+**2. Bandwidth Required Per Neuron**
+
+Each neuron needs a carrier frequency with some bandwidth around it:
+
+**Carrier Frequency Spacing:**
+
+For clean separation, neurons must be spaced by at least:
+```
+Δf ≥ 2 × Bandwidth_signal
+```
+
+**What is Bandwidth_signal?**
+
+This depends on how fast your input data changes:
+
+```
+Example for audio-rate data (like lissajous_hardware_design.m):
+- Input update rate: 100 Hz (slow training data)
+- Bandwidth needed: ~200 Hz (Nyquist × safety factor)
+- Minimum carrier spacing: 2 × 200 Hz = 400 Hz
+
+Example for faster data:
+- Input update rate: 1 kHz (real-time inference)
+- Bandwidth needed: ~2 kHz
+- Minimum carrier spacing: 4 kHz
+```
+
+**Guard Bands:**
+
+In practice, add extra spacing to prevent crosstalk:
+```
+Practical spacing = 2 × Bandwidth_signal × Safety_factor
+
+Where Safety_factor:
+- 1.5-2.0 for good filters
+- 3.0-5.0 for simple circuits (our DIY case)
+```
+
+**3. Calculating Maximum Neurons**
+
+**Example 1: DIY System (Slow Data)**
+
+Given:
+- Total bandwidth: 99 kHz (1 kHz to 100 kHz)
+- Input update rate: 100 Hz
+- Signal bandwidth: 200 Hz
+- Safety factor: 3.0 (DIY circuits)
+- Required spacing: 2 × 200 Hz × 3.0 = **1.2 kHz per neuron**
+
+```
+Maximum neurons = 99 kHz / 1.2 kHz = 82 neurons
+
+But with harmonics and practical concerns:
+Realistic maximum ≈ 50-60 neurons
+```
+
+**Example 2: DIY System (Fast Data)**
+
+Given:
+- Total bandwidth: 99 kHz
+- Input update rate: 1 kHz
+- Signal bandwidth: 2 kHz
+- Safety factor: 3.0
+- Required spacing: 2 × 2 kHz × 3.0 = **12 kHz per neuron**
+
+```
+Maximum neurons = 99 kHz / 12 kHz = 8 neurons
+
+Realistic maximum ≈ 6-7 neurons
+```
+
+**Example 3: Current Implementation (lissajous_hardware_design.m)**
+
+As demonstrated in the code:
+- 4 neurons at 1 kHz, 2 kHz, 3 kHz, 4 kHz
+- Spacing: 1 kHz between carriers
+- Total bandwidth used: 4 kHz (plus harmonics to ~12 kHz)
+- **Well within the 100 kHz limit ✓**
+- Could scale to ~20-30 neurons at this spacing
+
+**4. The Harmonic Problem**
+
+Each neuron's carrier frequency generates harmonics:
+
+```
+Fundamental: f₀
+2nd harmonic: 2f₀
+3rd harmonic: 3f₀
+...
+```
+
+**These harmonics occupy bandwidth too!**
+
+Example:
+- Neuron at 10 kHz generates harmonics at 20 kHz, 30 kHz, 40 kHz, etc.
+- If max frequency is 100 kHz, harmonics at 110 kHz, 120 kHz get aliased back
+- **Creates interference with other neurons!**
+
+**Solution: Harmonic Filtering**
+
+You need low-pass filters after each neuron to remove harmonics:
+```
+Simple RC filter:
+- Cutoff at 2 × f_carrier
+- Attenuates 2nd harmonic by ~20 dB
+- Costs: 1 resistor + 1 capacitor per neuron (~$0.10)
+
+Better active filter:
+- 4th-order Butterworth
+- Attenuates 2nd harmonic by ~80 dB
+- Costs: 1 op-amp + 4 R + 4 C per neuron (~$1.00)
+```
+
+**5. Frequency Allocation Strategies**
+
+**Strategy A: Linear Spacing (Simple, Less Efficient)**
+
+```
+Neuron 1: 1.0 kHz
+Neuron 2: 2.0 kHz
+Neuron 3: 3.0 kHz
+...
+Neuron N: N kHz
+
+Problems:
+- Harmonics overlap heavily
+- 2nd harmonic of neuron 1 (2 kHz) interferes with neuron 2!
+- Wastes bandwidth on guard bands
+```
+
+**Strategy B: Prime Frequency Spacing (Better, More Complex)**
+
+```
+Neuron 1: 1.1 kHz (prime)
+Neuron 2: 1.3 kHz (prime)
+Neuron 3: 1.7 kHz (prime)
+Neuron 4: 2.3 kHz (prime)
+...
+
+Advantages:
+- Harmonics less likely to coincide
+- Better spectral efficiency
+- Reduces crosstalk
+
+Disadvantage:
+- Harder to design filters
+```
+
+**Strategy C: Octave Spacing (Best for Audio)**
+
+```
+Neuron 1: 1 kHz
+Neuron 2: 2 kHz (1 octave up)
+Neuron 3: 4 kHz (2 octaves up)
+Neuron 4: 8 kHz (3 octaves up)
+...
+
+Advantages:
+- Harmonics naturally separated
+- Can use standard audio filters
+- Well-understood from music synthesis
+
+Maximum neurons: log₂(100 kHz / 1 kHz) ≈ 6-7 neurons
+```
+
+**6. Practical Neuron Limits by System**
+
+| System | Bandwidth | Neuron Spacing | Max Neurons (Theory) | Max Neurons (Realistic) | Limiting Factor |
+|--------|-----------|----------------|---------------------|------------------------|-----------------|
+| **DIY Breadboard** | 9 kHz | 1 kHz | 9 | **4-6** | Crosstalk, parasitics |
+| **DIY Protoboard** | 99 kHz | 1 kHz | 99 | **50-80** | Harmonic filtering |
+| **DIY Protoboard** | 99 kHz | 100 Hz | 990 | **200-400** | ADC sampling rate |
+| **Custom PCB** | 9.9 MHz | 10 kHz | 990 | **500-800** | Filter complexity |
+| **Professional** | 99 MHz | 100 kHz | 990 | **800-1000** | Circuit design cost |
+
+**Why the gap between theory and reality?**
+
+1. **Harmonic interference** reduces usable neurons by 30-50%
+2. **Crosstalk** between adjacent channels
+3. **Filter roll-off** isn't perfect - need guard bands
+4. **ADC sampling rate** must be ≥ 2× highest frequency (Nyquist)
+5. **Component tolerances** cause frequency drift
+6. **Thermal drift** changes frequencies over time
+
+**7. The ADC Bottleneck**
+
+To digitize the output, your ADC must sample at:
+```
+ADC_sample_rate ≥ 2 × Highest_frequency × Safety_factor
+
+For 100 kHz max frequency:
+Minimum: 200 kHz (Nyquist)
+Recommended: 400-500 kHz (2.5× oversampling)
+```
+
+**Typical ADC costs:**
+- Arduino (10-bit, 10 kHz): Free with board, **TOO SLOW**
+- ADS1115 (16-bit, 860 Hz): $5, **TOO SLOW**
+- ADS8688 (16-bit, 500 kHz): $15, **PERFECT** for 100 kHz system
+- AD7606 (16-bit, 200 kHz × 8 ch): $25, **IDEAL** for multi-neuron
+
+**8. Scaling Comparison: Memristors vs Optics**
+
+**Why optical systems can have BILLIONS of neurons:**
+
+| Parameter | Memristor (Electrical) | Fiber Optics | Advantage |
+|-----------|------------------------|--------------|-----------|
+| **Carrier frequency** | 1-100 kHz | 193 THz (1550 nm) | 10⁹× higher |
+| **Bandwidth available** | 100 kHz | 100 THz (1450-1650 nm) | 10⁹× wider |
+| **Neurons per wavelength** | 100 | 10,000 | 100× denser |
+| **Number of wavelengths** | 1 | 80+ (WDM) | 80× more |
+| **Total neurons** | **100** | **80 × 10,000 = 800,000+** | **8000× more** |
+
+**But the control is the SAME!**
+- Z80 programs weights via I/O ports (same code)
+- Arduino/FPGA bridge translates to hardware
+- Same phase-coding mathematics
+
+---
+
+**Why Optical Scaling is the "Ultimate Solution" - Detailed Explanation**
+
+Optical/photonic systems break ALL the frequency limitations that constrain electrical memristor systems. Here's why:
+
+**1. Carrier Frequency: 10⁹× Higher**
+
+**Electrical (Memristor):**
+- Carrier frequency: 1-100 kHz (audio range)
+- This is the frequency of your AC signal: `sin(2π × 1000 × t)`
+- Limited by: Parasitic capacitance, wire inductance, PCB design
+
+**Optical (Fiber):**
+- Carrier frequency: 193 THz (infrared light at 1550 nm wavelength)
+- This is the frequency of the light wave: `sin(2π × 193×10¹² × t)`
+- Formula: `f = c/λ = (3×10⁸ m/s) / (1550×10⁻⁹ m) = 193 THz`
+- **That's 1,930,000,000 times higher than 100 kHz!**
+
+**Why this matters:**
+```
+For electrical at 100 kHz:
+- One wave cycle = 10 microseconds
+- Information transfer rate limited to ~100 kHz max
+
+For optical at 193 THz:
+- One wave cycle = 5.2 femtoseconds (5.2 × 10⁻¹⁵ seconds)
+- Information transfer rate can be THz range!
+```
+
+**Real-world impact:**
+- Electrical neuron: Takes 10 µs per computation cycle
+- Optical neuron: Takes 5 fs per computation cycle
+- **Speedup: 2,000,000× faster per operation!**
+
+**2. Bandwidth Available: 10⁹× Wider**
+
+**Electrical (Memristor):**
+```
+Usable bandwidth = 100 kHz - 1 kHz = 99 kHz
+
+Why so small?
+- Bottom limit (1 kHz): Need ω >> ω₀ for stable operation
+- Top limit (100 kHz): Parasitic capacitance kills signal
+- Total: ~99 kHz to fit neurons into
+
+If each neuron needs 1 kHz spacing:
+Maximum neurons ≈ 99 kHz / 1 kHz = 99 neurons (theoretical)
+                                 ≈ 50-60 neurons (realistic)
+```
+
+**Optical (Fiber):**
+```
+Telecom C-band: 1450 nm to 1650 nm
+Convert to frequency:
+- f_high = c / λ_low = 3×10⁸ / (1450×10⁻⁹) = 206.9 THz
+- f_low = c / λ_high = 3×10⁸ / (1650×10⁻⁹) = 181.8 THz
+
+Usable bandwidth = 206.9 THz - 181.8 THz = 25.1 THz
+
+But wait! Full usable range (S, C, L bands combined):
+1260 nm to 1675 nm = 415 THz - 179 THz = 236 THz total!
+
+Let's be conservative and use just C-band: 25 THz
+```
+
+**Comparison:**
+```
+Electrical bandwidth: 99 kHz = 0.000099 GHz
+Optical bandwidth: 25,000 GHz (C-band only!)
+
+Ratio: 25,000 GHz / 0.000099 GHz = 252,525,252× wider!
+
+That's a quarter BILLION times more bandwidth!
+```
+
+**What this means for neurons:**
+```
+If each neuron needs 1 GHz spacing (very conservative for optics):
+Maximum neurons = 25,000 GHz / 1 GHz = 25,000 neurons PER wavelength!
+
+With better design (100 MHz spacing):
+Maximum neurons = 25,000 GHz / 0.1 GHz = 250,000 neurons PER wavelength!
+```
+
+**3. Wavelength Division Multiplexing (WDM): 80× Parallel Channels**
+
+This is where it gets INSANE!
+
+**Electrical (Memristor):**
+- You have ONE "channel" (one set of wires)
+- All neurons must share the same bandwidth
+- Total neurons = bandwidth / spacing
+
+**Optical (Fiber):**
+- You can send MULTIPLE wavelengths down the SAME fiber simultaneously!
+- Each wavelength is an independent channel
+- They don't interfere with each other!
+
+**Standard WDM channels (100 GHz ITU grid):**
+```
+Wavelength 1: 1530.00 nm (195.90 THz)
+Wavelength 2: 1530.80 nm (195.82 THz)  ← 0.8 nm apart
+Wavelength 3: 1531.60 nm (195.74 THz)
+...
+Wavelength 80: 1593.60 nm (188.10 THz)
+
+Total: 80 wavelengths in C-band
+Each wavelength: Independent 100 GHz channel
+```
+
+**Think of it like this:**
+```
+Electrical system:
+┌─────────────────────────────────┐
+│   One wire pair                 │
+│   99 kHz bandwidth              │
+│   ~50 neurons TOTAL             │
+└─────────────────────────────────┘
+
+Optical system:
+┌─────────────────────────────────┐ λ1: 1530 nm → 10,000 neurons
+│                                 │ λ2: 1531 nm → 10,000 neurons
+│   One fiber                     │ λ3: 1532 nm → 10,000 neurons
+│   80 wavelengths                │ ...
+│   Each: 100 GHz bandwidth       │ λ80: 1593 nm → 10,000 neurons
+│                                 │
+│   TOTAL: 800,000 neurons!       │
+└─────────────────────────────────┘
+```
+
+**And it gets better with Dense WDM (DWDM):**
+- 50 GHz spacing: 160 channels
+- 25 GHz spacing: 320 channels
+- 12.5 GHz spacing: 640 channels!
+
+**With 640 channels × 10,000 neurons each = 6.4 MILLION neurons on one fiber!**
+
+**4. No Parasitics at Optical Frequencies**
+
+**Electrical Problem:**
+```
+At 100 kHz:
+- Wire has capacitance: ~100 pF/m
+- Wire has inductance: ~300 nH/m
+- PCB traces: ~150 pF/m
+- These CREATE phase shifts (unwanted!)
+
+Impedance: Z = jωL + 1/(jωC)
+At ω = 2π × 100 kHz:
+- Inductive reactance: X_L = ωL = 0.19 Ω/m
+- Capacitive reactance: X_C = 1/(ωC) = 16 kΩ/m
+
+These parasitic elements distort your carefully designed phase shifts!
+```
+
+**Optical Solution:**
+```
+Light travels in fiber as electromagnetic wave in glass
+- No "wires" with parasitic capacitance
+- No "inductance" from current loops
+- Phase shifts ONLY from designed elements (phase shifters)
+
+Fiber properties:
+- Attenuation: 0.2 dB/km (negligible for <100m runs)
+- Dispersion: 17 ps/(nm·km) (manageable with proper design)
+- Nonlinearity: Only at very high powers (>100 mW)
+
+For DIY systems (<10 mW optical power):
+Fiber is essentially a perfect, lossless, phase-preserving channel!
+```
+
+**5. Speed of Propagation**
+
+**Electrical:**
+```
+Signal propagates at ~0.6c in PCB traces (c = speed of light)
+For 10 cm trace:
+Propagation delay = 0.1 m / (0.6 × 3×10⁸ m/s) = 0.56 ns
+
+This delay adds phase shift: φ = ωt
+At 100 kHz: φ = 2π × 100,000 × 0.56×10⁻⁹ = 0.00035 radians (negligible)
+At 10 MHz: φ = 0.035 radians (starts to matter!)
+At 100 MHz: φ = 0.35 radians (20°, significant!)
+
+This limits how fast you can go!
+```
+
+**Optical:**
+```
+Light propagates at ~0.67c in fiber
+For 1 m fiber:
+Propagation delay = 1 m / (0.67 × 3×10⁸ m/s) = 5 ns
+
+Phase shift: φ = (2π/λ) × L
+At λ = 1550 nm: φ = (2π / 1550×10⁻⁹) × 1 = 4.05×10⁶ radians
+
+BUT: We control phase with phase shifters (piezo, thermo-optic)
+The propagation phase is constant and cancels out in interferometer!
+
+Result: Clean, controllable phase shifts at THz frequencies!
+```
+
+**6. Power Consumption**
+
+**Electrical (64 neurons @ 100 kHz):**
+```
+Per neuron:
+- Memristor: R = 100 kΩ, V = 1V
+- Power: P = V²/R = 1² / 100,000 = 10 µW
+- Total for 64: 640 µW
+
+ADC (ADS8688 @ 500 kHz):
+- Power: 100 mW
+
+Active filters (64 × op-amp):
+- Per op-amp: 1 mW
+- Total: 64 mW
+
+Z80 + interface: 50 mW
+
+Total power: 640 µW + 100 mW + 64 mW + 50 mW ≈ 215 mW
+```
+
+**Optical (800,000 neurons @ 193 THz):**
+```
+Laser diode (1550 nm, 10 mW):
+- Electrical power: 50 mW (wall plug efficiency ~20%)
+
+80 wavelengths with phase shifters:
+- Thermo-optic: 50 mW each
+- Total: 80 × 50 mW = 4 W
+
+Photodetectors (80):
+- Negligible (<1 mW each)
+
+Control electronics (Arduino/FPGA): 1 W
+
+Total power: 50 mW + 4 W + 1 W ≈ 5 W
+
+Power per neuron:
+Electrical: 215 mW / 64 = 3.4 mW per neuron
+Optical: 5 W / 800,000 = 0.00625 mW per neuron
+
+Optical is 544× more power efficient per neuron!
+```
+
+**7. Physical Size**
+
+**Electrical (64 neurons):**
+```
+Protoboard: 20 cm × 15 cm = 300 cm²
+Height with components: ~5 cm
+Volume: ~1500 cm³
+
+Neuron density: 64 / 1500 cm³ = 0.043 neurons/cm³
+```
+
+**Optical (800,000 neurons on chip):**
+```
+Silicon photonic chip: 5 mm × 5 mm = 0.25 cm²
+Height: 0.5 mm = 0.05 cm
+Volume: ~0.0125 cm³
+
+Neuron density: 800,000 / 0.0125 cm³ = 64,000,000 neurons/cm³
+
+That's 1.5 BILLION times denser!
+```
+
+**8. The "But Same Control" Magic**
+
+Here's the beautiful part:
+
+**Z80 Assembly Code (IDENTICAL for both!):**
+```assembly
+; Program weight for neuron 5
+LD A, 0x05           ; Select neuron 5
+OUT (NEURON_SEL), A
+LD A, 0x7F           ; Phase value (127 = π/2 radians)
+OUT (WEIGHT_PORT), A
+
+; Read output
+IN A, (OUTPUT_PORT)
+; A now contains result
+```
+
+**What happens behind the scenes:**
+
+**For electrical memristor system:**
+```
+1. Z80 outputs to port 0x21
+2. DAC converts to voltage (0x7F → 2.5V)
+3. Voltage pulse programs memristor resistance
+4. Resistance creates phase shift when AC applied
+5. ADC reads interference pattern
+6. Z80 reads from port 0x30
+```
+
+**For optical system:**
+```
+1. Z80 outputs to port 0x21
+2. Arduino/FPGA receives command
+3. DAC converts to voltage (0x7F → 2.5V)
+4. Voltage drives thermo-optic phase shifter
+5. Phase shifter changes optical path length
+6. Photodetector reads interference pattern
+7. ADC converts to digital
+8. Arduino sends to Z80 port 0x30
+```
+
+**Same code, 1 billion times more bandwidth!**
+
+**9. Cost Comparison**
+
+**DIY Electrical (64 neurons):**
+- Materials: $327 (from earlier calculation)
+- Cost per neuron: $5.11
+- Performance: 10 ms inference
+
+**DIY Optical (4 neurons, simple MZI):**
+- Laser: $30
+- Fiber + couplers: $100
+- Piezo phase shifters: $8
+- Photodetectors: $40
+- Arduino: $20
+- Total: $198
+- Cost per neuron: $49.50
+- Performance: 1 ns inference (10,000× faster!)
+
+**Professional Optical (1000 neurons, photonic chip):**
+- Chip fabrication: $2000 (via university fab)
+- Packaging: $500
+- Control electronics: $500
+- Total: $3000
+- Cost per neuron: $3.00
+- Performance: 1 ns inference + 1 million neurons possible!
+
+**10. Summary: Why Optical is "Ultimate"**
+
+Optical scaling breaks EVERY limitation of electrical systems:
+
+| Limitation | Electrical Limit | Optical Solution | Improvement |
+|------------|------------------|------------------|-------------|
+| Max frequency | 100 kHz (parasitics) | 193 THz (light itself!) | 10⁹× |
+| Bandwidth | 99 kHz | 25 THz (C-band) | 10⁹× |
+| Parasitics | Severe at >100 kHz | None (light in fiber) | ∞ |
+| Channels | 1 (one wire) | 80+ (WDM) | 80× |
+| Neurons | ~60 (realistic) | 800,000+ (realistic) | 13,000× |
+| Speed | 10 ms inference | 1 ns inference | 10,000× |
+| Power/neuron | 3.4 mW | 0.006 mW | 544× better |
+| Size/neuron | 23 cm³ | 1.6×10⁻⁸ cm³ | 10⁹× denser |
+
+**And the SAME Z80 control code works for both!**
+
+**Bottom Line:**
+
+Electrical memristor systems are:
+- ✓ Great for learning ($100-300)
+- ✓ Easy to build (DIY friendly)
+- ✓ Good for small networks (4-60 neurons)
+- ✗ Limited by bandwidth (99 kHz)
+- ✗ Limited by parasitics (>100 kHz impossible)
+
+Optical photonic systems are:
+- ✓ Unlimited bandwidth (THz available)
+- ✓ No parasitics (light in fiber)
+- ✓ Massive parallelism (WDM)
+- ✓ Same control interface!
+- ✓ Path to billions of neurons
+- ✗ Harder to build (but still DIY-able for $200!)
+- ✓ **This is the ultimate solution** for scaling!
+
+**The Vision:**
+1. Start with memristors ($100) - learn the concepts
+2. Build 4-8 neuron system - prove it works
+3. Transition to fiber optics ($200) - same code, 10,000× faster
+4. Scale to photonic chips ($2000) - reach millions of neurons
+5. Add WDM ($10,000+) - billions of neurons!
+
+All controlled by the SAME Z80 assembly code you wrote for step 1!
+
+---
+
+**9. Strategies to Increase Neuron Count**
+
+If you're limited by bandwidth, try these:
+
+**A. Use Multiple Independent Frequency Bands**
+
+```
+Band 1: 1-10 kHz → 8 neurons
+Band 2: 20-30 kHz → 8 neurons
+Band 3: 40-50 kHz → 8 neurons
+Band 4: 60-70 kHz → 8 neurons
+
+Total: 32 neurons (with guard bands between bands)
+
+Requires:
+- Band-pass filters for each band
+- Separate ADCs or multiplexing
+- Cost: ~$5-10 per band
+```
+
+**B. Time Division Multiplexing (TDM)**
+
+```
+Time slot 1 (0-10 ms): Process neurons 1-8
+Time slot 2 (10-20 ms): Process neurons 9-16
+...
+
+Disadvantage:
+- Throughput reduced by N_slots
+- But total neuron count increased!
+
+Good for: Training (slow), not real-time inference
+```
+
+**C. Hybrid: Frequency + Time Division**
+
+```
+Frequency: 8 neurons in parallel
+Time: 10 time slots
+Total: 80 neurons
+
+Cost: Minimal (just switching logic)
+Penalty: 10× slower inference
+```
+
+**D. Go to Higher Frequencies**
+
+```
+Instead of 1-100 kHz, use 100 kHz - 10 MHz
+
+Requires:
+- Professional PCB design (impedance matching)
+- Better memristors (lower ω₀)
+- High-speed ADCs (>20 MHz)
+- Better filters
+
+Cost: $500-2000
+Benefit: 100× more neurons
+```
+
+**E. Go Optical (Ultimate Solution)**
+
+```
+Use fiber optics instead of electrical signals
+
+Benefits:
+- 100 THz bandwidth
+- Billions of neurons possible
+- Same Z80 control interface!
+
+Cost: $200-400 for basic system
+See: "Scaling to Optical Speeds" section
+```
+
+**10. Design Example: 64-Neuron System**
+
+**Target: 64 neurons with DIY memristors**
+
+**Specifications:**
+- Total bandwidth: 100 kHz (protoboard, good layout)
+- Neuron spacing: 1.5 kHz (includes guard bands)
+- Frequency range: 2 kHz to 98 kHz
+- Number of neurons: (98-2)/1.5 ≈ 64 ✓
+
+**Frequency Allocation:**
+```
+Neuron 1:  2.0 kHz
+Neuron 2:  3.5 kHz
+Neuron 3:  5.0 kHz
+...
+Neuron 64: 96.5 kHz
+```
+
+**Required Components:**
+- 64 memristors (~$50 for materials)
+- 64 band-pass filters (~$3 each = $192)
+- 8-channel ADC @ 250 kHz (~$25)
+- 8:1 analog multiplexer (~$10)
+- Protoboard and passives (~$50)
+
+**Total cost: ~$327**
+
+**Performance:**
+- Inference time: 10 ms (limited by ADC sequential sampling)
+- Training time: 640 ms (64 × 10ms per weight)
+- Power: ~500 mW
+- Neuron density: 64 neurons / $327 = **$5.11 per neuron**
+
+**Compare to:**
+- GPU neural network: $500 / 1000 neurons = **$0.50 per neuron** (but 100W power!)
+- Photonic chip: $2000 / 1000 neurons = **$2.00 per neuron** (but 1000× faster!)
+
+**11. Summary: Frequency-Neuron Relationship**
+
+```
+KEY EQUATION:
+
+N_max = (f_max - f_min) / (Spacing × Safety_factor)
+
+Where:
+  N_max = Maximum parallel neurons
+  f_max = Highest usable frequency (limited by parasitics)
+  f_min = Lowest stable frequency (ω >> ω₀)
+  Spacing = Minimum frequency separation for clean signals
+  Safety_factor = 1.5 to 5.0 (depends on filter quality)
+```
+
+**Critical Insights:**
+
+1. **Frequency DOES limit neurons** - but only for parallel processing
+2. **Can trade speed for count** - use time-division multiplexing
+3. **Better circuits = more neurons** - invest in PCB, filters, ADCs
+4. **Optical scaling breaks the limit** - 10⁹× more bandwidth!
+5. **Same Z80 code works regardless** - abstraction layer handles details
+
+**Practical Guidelines:**
+
+- **Start small**: 4-8 neurons (lissajous_hardware_design.m shows this)
+- **Prove concept**: Verify phase stability and interference patterns
+- **Scale gradually**: Add neurons one band at a time
+- **Measure carefully**: Use spectrum analyzer to check for crosstalk
+- **Plan for optics**: When you hit electrical limits, transition to fiber
+
+**Bottom Line:**
+
+Yes, frequency limits neurons, but it's a **manageable constraint** with proper design. The real limit is cost/complexity, not physics!
+
+---
+
 ### Scaling to Optical Speeds: Fiber-Based Neural Networks with Z80 Control
 
 While memristors operate at 1-10 kHz, the same phase-computing architecture can scale to **100 THz** using optical fiber systems - achieving BILLIONS of neurons while still using the Z80 as a controller!
