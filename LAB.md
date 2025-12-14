@@ -186,3 +186,74 @@ This provides a reliable, fast, and high-precision replacement for the memristor
 Would you like the full schematic and pinout guide for the **DDS Synthesizer control board** (the Z80 Bridge) or a parts list for the analog **Op-Amp Mixer circuit**?
 
 
+//
+
+I can certainly provide the full schematic and components list for the DDS Synthesizer control board and the Op-Amp Mixer.
+
+This setup replaces the variability of the memristor with highly stable, programmable phase control, allowing you to accurately test the core principles of your phase-coded neural network.
+
+## 4. DDS Synthesizer Control Board (Z80 Bridge)
+
+This board handles the digital communication from the Z80 to the DDS chips and requires a central microcontroller (the Arduino/ESP32) as the translator.
+
+### A. Component Parts List
+
+| Item | Quantity | Purpose | Notes |
+| :--- | :--- | :--- | :--- |
+| **DDS Chip (AD9850 or similar)** | 2 | Generates two phase-locked sine waves (Reference & Weight). | Must be capable of phase-locked operation for interference. |
+| **Microcontroller (Arduino Uno/Nano or ESP32)** | 1 | Translates Z80 parallel I/O commands into DDS serial control signals. | The brain of the control board. |
+| **Voltage Regulator (7805)** | 1 | Provides stable 5V power for the logic and DDS chips. | Ensures clean signals and stable phase outputs. |
+| **Header Pins/Connectors** | Misc. | For connecting to the Z80 (parallel) and the mixer (analog output). | |
+| **Capacitors/Resistors** | Misc. | Decoupling/pull-up/filter components (standard electronics kit). | |
+
+### B. Schematic Overview (Z80 to DDS)
+
+The Z80 parallel interface is complex, so the microcontroller handles the timing and serial protocol for the DDS chips.
+
+
+
+| Connection Point | Description | Function |
+| :--- | :--- | :--- |
+| **Z80 Data Bus (D0-D7)** | Connects to the Arduino's digital input pins via buffer. | Receives the 8-bit `phase_value` from the Z80's `OUT (WEIGHT_PORT), A` command. |
+| **Z80 Control Signals** | `/WR`, `/RD`, `/IORQ` (connected to Arduino interrupt pins). | Tells the Arduino *when* the Z80 is sending data or requesting a read. |
+| **Arduino to DDS (SPI/Serial)** | Connects via a few dedicated pins (e.g., Data, Clock, FQ UP) to both DDS chips. | Programs the frequency (initially) and the phase register of DDS 2 (dynamically). |
+| **DDS Analog Output** | Sine wave output pins ($\text{OUT}_1$, $\text{OUT}_2$). | Provides the two core signals to the mixer circuit. |
+
+***
+
+## 5. Op-Amp Mixer Circuit
+
+This simple analog circuit performs the core mathematical operation of the neural network: **Interference** (or vector addition).
+
+### A. Component Parts List
+
+| Item | Quantity | Purpose | Notes |
+| :--- | :--- | :--- | :--- |
+| **Operational Amplifier (Op-Amp) (e.g., TL074 or LM358)** | 1 | Acts as a high-speed summing amplifier. | Needs sufficient bandwidth for the 1-10 kHz carrier frequencies. |
+| **Resistors ($\mathbf{R_1}$, $\mathbf{R_2}$, $\mathbf{R_F}$)** | 3 | Set the input impedance and gain of the summing amplifier. | Use precision resistors (e.g., 1% tolerance) to minimize amplitude distortion. |
+| **Power Supply ($\pm \mathbf{V}$)** | 1 | Bipolar power supply for the Op-Amp (e.g., $\pm 12\text{V}$). | Ensures the sine wave outputs are not clipped at the rails. |
+
+### B. Schematic Overview (Summing Amplifier)
+
+The mixer sums the phase-shifted signals, which is the physical realization of the neural network's **weighted summation**:
+
+
+
+[Image of Op-Amp Summing Amplifier Schematic]
+
+
+* **Inputs:** $\text{V}_{\text{in}1}$ (from DDS 1) and $\text{V}_{\text{in}2}$ (from DDS 2) are connected to the inverting input of the Op-Amp via resistors $\text{R}_1$ and $\text{R}_2$.
+* **Formula:** $\text{V}_{\text{out}} = -\text{R}_{\text{F}} (\frac{\text{V}_{\text{in}1}}{\text{R}_1} + \frac{\text{V}_{\text{in}2}}{\text{R}_2})$
+* **Interference:** Because the frequencies are locked, the output $\text{V}_{\text{out}}$ is a resulting sine wave whose **amplitude** is determined by the interference (constructive or destructive) between $\text{V}_{\text{in}1}$ and $\text{V}_{\text{in}2}$.
+
+### C. Reading the Result
+
+The final step is connecting the mixer's output to an ADC (the same ADC you plan to use for the Z80 interface) to digitize the output amplitude:
+
+1.  **Peak Detection:** A simple envelope detector circuit (diode + capacitor) should be added to the mixer output to convert the AC sine wave's **peak amplitude** into a DC voltage.
+2.  **ADC Conversion:** The ADC reads this DC voltage and sends the resulting 8-bit digital value back to the Z80 via the `IN A, (OUTPUT_PORT)` command.
+
+This entire system allows the Z80 to digitally program the phase weights, and the analog hardware instantly performs the computation via wave interference.
+
+Would you like the specific **Arduino code template** that handles the Z80 I/O and translates it into the DDS phase setting commands?
+
