@@ -29,7 +29,6 @@ I found that a quick way to fabricate a homemade memristor is to lightly dust a 
 ## Iterate
 - combine with other crossbar matrix projects using register control like https://github.com/SteveJustin1963/tec-iDADmm
 - 
-//////////////
 
 
 A memristor is a passive two-terminal electronic component whose resistance (memristance) changes based on the history of current or voltage applied to it, acting like a non-volatile memory element or synapse in neuromorphic systems. It "remembers" its last state even without power, making it useful for dense memory, analog computing (e.g., matrix operations for AI), or in-memory processing to avoid von Neumann bottlenecks. In computing, memristors can form crossbar arrays for parallel vector-matrix multiplications, where rows/columns act as inputs/outputs, and memristance values represent weights—enabling efficient neural network inference or pattern recognition without moving data between CPU and memory.
@@ -3408,7 +3407,6 @@ Homemade memristors are flaky. Use an emulator circuit (mimics behavior digitall
 
 This setup adds non-volatile-like memory or basic AI to your Z80 SBC without advanced fab. For deeper dives, check EEVblog forums or Knowm.org for crossbar ideas. If you have specific Z80 SBC details (e.g., ports available), I can refine the interface.
 
-///////////////////
 
 ### Detailed Z80 Assembly Code for Memristor Interface
 
@@ -3641,7 +3639,6 @@ INPUTS: DB 5,6          ; Example inputs
 
 If your SBC has specific constraints (e.g., different ports, interrupts), or you want code for a full neural net demo, provide more details!
 
-/////////
 
 
 # Phase Computing: Our Approach vs Commercial Systems (2025)
@@ -4074,7 +4071,6 @@ Want me to design the complete fiber-optic phase neural network circuit with par
 
 
 
-/////////
 
 Yes, phase-coded (or phase-based) computing exists in several forms today, though it's not yet a dominant mainstream computing paradigm like binary digital electronics. Here are the main real-world examples and research directions where phase is used as the primary information carrier or computational variable:
 
@@ -4170,7 +4166,6 @@ This is literally phase-only computing with two $3 laser pointers and some polar
 Bottom line: Yes, real phase-coded computing at home is totally doable in 2025. Start with the 4-spin optical Ising machine — it’s the most impressive thing you can build for the money and it is 100% the same physics as the huge commercial systems.
 
 
-///
 
 Here are real, working DIY photonic neural network projects you can actually build at home in 2025 with parts costing $20–$400. They perform real matrix multiplications or inference using optical phase (and sometimes amplitude) — exactly like Lightmatter or Celestial AI chips, just much smaller and slower.
 
@@ -4348,7 +4343,6 @@ Based on Clements design adaptations from research papers (e.g., NTT self-config
 
 This setup demonstrates real photonic computing—light does the math! If you hit issues, search optics forums or tweak for your parts. For 8x8, double the grid but expect 2x build time.
 
-////
 
 ### What is Photonic Reservoir Computing?
 
@@ -4408,7 +4402,6 @@ On X (formerly Twitter), discussions highlight QCi's launches and stock impacts,
 | 4-Port NeuroPIC | Hybrid PIC | Neuromorphic for signal processing | Hardware realization | IOP Publishing |
 
 PRC is gaining traction in 2025, bridging photonics with AI for energy-efficient, high-speed computing. While not yet mainstream, commercial pushes like QCi's could accelerate adoption. For DIY enthusiasts (from prior context), simple versions might use laser diodes and delay lines, but they're more research-oriented—check open-source designs on GitHub or adapt MZI meshes for basic reservoirs.
-///
 
 
 
@@ -4451,7 +4444,6 @@ With QCi's Neurawave launch (Nov 2025) pushing PRC into edge AI hardware, and ph
 
 If you meant a specific aspect (e.g., encoding only), or want a build guide for PRC, let me know.
 
-///
 
 ### Can Photonic Reservoir Computing and Phase-Coded Computing Be Combined?
 
@@ -4501,11 +4493,6 @@ Building on our 4x4 MZI guide (~$200–500), add a simple delay loop for hybrid 
 4. **Test**: Expect ~80% accuracy on basic chaos tasks; total add-on cost ~$100. Guides: Adapt from arXiv:2404.01479 schematics or GitHub "photonic RC fiber loop".
 
 In summary, combining them isn't just feasible—it's a hot 2025 trend yielding smarter, faster photonics. If you want a full build guide or code for simulation, say the word!
-
-//
-
-
-///////////////////////////
 
 
 ---
