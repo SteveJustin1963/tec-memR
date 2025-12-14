@@ -238,7 +238,7 @@ This simple analog circuit performs the core mathematical operation of the neura
 The mixer sums the phase-shifted signals, which is the physical realization of the neural network's **weighted summation**:
 
 
-<img width="3998" height="1828" alt="image" src="https://github.com/user-attachments/assets/256dac45-5b1e-4cca-8ac0-ee6d70464e8e" />
+<img width="399" height="182" alt="image" src="https://github.com/user-attachments/assets/256dac45-5b1e-4cca-8ac0-ee6d70464e8e" />
 
 
 * **Inputs:** $\text{V}_{\text{in}1}$ (from DDS 1) and $\text{V}_{\text{in}2}$ (from DDS 2) are connected to the inverting input of the Op-Amp via resistors $\text{R}_1$ and $\text{R}_2$.
