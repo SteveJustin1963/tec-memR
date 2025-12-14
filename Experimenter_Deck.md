@@ -1,3 +1,7 @@
+- https://github.com/GroeblacherLab/FiberStretcher
+-https://ira.lib.polyu.edu.hk/bitstream/10397/6540/1/Lau_Economical_Piezoelectric_Modulator.pdf
+- 
+
 ### Suggested Experimenter Deck for Z80 SBC: Integrating Memristors, Phase Shifts, Lissajous, and Analog Computing
 
 Based on the concepts discussed in this chat—memristor crossbar arrays, Lissajous curves for phase-coded computation, alternative phase encoders (e.g., varactors, digital pots, piezo stretchers), and blending with analog elements—I'll suggest a modular **experimenter deck** (expansion board) that plugs into a Z80 single-board computer (SBC) like the RC2014, LiNC80, or Eazy80. This deck acts as a peripheral module, allowing hands-on experimentation with all mentioned topics without rebuilding the core Z80 system. It's inspired by existing Z80 expansion designs (e.g., z50bus-compatible boards for easy interfacing) and the tec-memR project's hardware roadmap, adapted for versatility.
