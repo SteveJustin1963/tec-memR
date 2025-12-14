@@ -1,6 +1,5 @@
 - https://github.com/GroeblacherLab/FiberStretcher
-- 
--https://ira.lib.polyu.edu.hk/bitstream/10397/6540/1/Lau_Economical_Piezoelectric_Modulator.pdf
+- https://ira.lib.polyu.edu.hk/bitstream/10397/6540/1/Lau_Economical_Piezoelectric_Modulator.pdf
 - 
 
 ### Suggested Experimenter Deck for Z80 SBC: Integrating Memristors, Phase Shifts, Lissajous, and Analog Computing
