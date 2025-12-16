@@ -48,39 +48,6 @@ very precise, incremental changes in resistance across many levels.
 test1_ver1.mint
 
 
-# BUGS FIXED FROM ORIGINAL VERSION
-
-The original code had several critical errors that violated MINT 2 syntax rules. The following bugs were identified and corrected based on the MINT 2 Manual:
-
-## Bug 1: Multi-Character Variable Names (ILLEGAL)
-**Problem:** MINT 2 only supports single-character variable names (a-z lowercase).
-**Original code used:** `pol_set`, `pol_reset`, `count`, `pol`
-**Corrected to:** `s`, `r`, `c`, `l`
-**Reason:** MINT 2 interprets `pol_set` as multiple separate tokens (p, o, l, _, s, e, t), causing parser corruption and crashes.
-
-## Bug 2: @ Operator Usage (INVALID)
-**Problem:** The `@` operator has no use in MINT 2 code (per MINT 2 Manual line 40).
-**Original code:** `pol_set @p /O`
-**Corrected to:** `s p /O`
-**Reason:** The `@` operator is not implemented and causes interpreter errors.
-
-## Bug 3: Inline Comments (FATAL)
-**Problem:** Inline comments on the same line as code corrupt MINT's input buffer.
-**Original code:** Had comments after code on same line
-**Corrected to:** All inline comments removed; comments only on separate lines with `//`
-**Reason:** MINT 2 Manual explicitly warns: "Do not use inline comments as it interferes with MINT's buffer" (lines 26, 1298-1320).
-
-## Bug 4: Stack Order in :I Function
-**Problem:** Incorrect stack parameter order in incremental pulse function.
-**Original code:** Parameters popped in wrong order
-**Corrected to:** `l ! c ! w !` (polarity, count, width)
-**Reason:** MINT 2 uses LIFO (Last In, First Out) stack ordering. Parameters must be popped in reverse order of how they're pushed.
-
-## Bug 5: Missing Spaces Before / Operators
-**Problem:** MINT 2 requires spaces before all `/` operators.
-**Original code:** `12!/E`
-**Corrected to:** `12! /E`
-**Reason:** MINT 2 Manual line 43: "All commands that start with / must have a space before it."
 
 
 # Memristor Pulse Driver Manual for MINT 2 on TEC-1 Z80 SBC
