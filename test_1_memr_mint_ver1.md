@@ -9,32 +9,32 @@ is determined by the history of the charge that has flowed through it.
 
 The key specific parameters that must be controlled are:
 
-Polarity (Direction): 
+- Polarity (Direction): 
 The direction of the applied voltage or current 
 determines whether the resistance increases or decreases.
 
-SET pulse (Write 'ON'): 
+- SET pulse (Write 'ON'): 
 A pulse of one polarity lowers the resistance, 
 typically setting the device to a low resistance state (LRS).
 
-RESET pulse (Write 'OFF'): 
+- RESET pulse (Write 'OFF'): 
 A pulse of the opposite polarity 
 increases the resistance, 
 setting the device to a high resistance state (HRS).
 
-Amplitude (Voltage/Current): 
+- Amplitude (Voltage/Current): 
 The voltage or current amplitude must be precise 
 and typically needs to exceed a specific threshold voltage (VSET​ or VRESET​) 
 to initiate a resistance change.
 
-Pulse Width (Duration): 
+- Pulse Width (Duration): 
 The length of the pulse controls the total amount of charge that flows, 
 which, in turn, dictates the magnitude of the resistance change.
 
-Writing/Programming: 
+- Writing/Programming: 
 A longer, stronger pulse is used to reliably "write" or change the device's memory state.
 
-Reading: 
+- Reading: 
 A much shorter or lower-voltage pulse is used to "read" the device's current resistance state without causing it to change.
 
 
