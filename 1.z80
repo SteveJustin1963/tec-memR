@@ -1,0 +1,33 @@
+; Z80 Assembly Code: Read Memristor via ADC
+
+; Port Definitions
+ADC_READ_PORT: equ 0x20       ; Input port for reading ADC value
+VOLTAGE_CONTROL_PORT: equ 0x10 ; Output port for controlling the read voltage
+
+; Main routine
+start:
+    ; Turn on the read voltage
+    ld a, 0x01
+    out (VOLTAGE_CONTROL_PORT), a
+    
+    ; Call a small delay to let the voltage stabilize
+    call delay
+
+    ; Read the ADC value into A
+    in a, (ADC_READ_PORT)
+
+    ; After reading, turn off the read voltage
+    xor a              ; Load A with 0
+    out (VOLTAGE_CONTROL_PORT), a
+
+    ; Now A contains the ADC reading (0255)
+    
+    ; End of the routine
+    halt
+
+; Small delay routine (simple software loop)
+delay:
+    ld b, 0xFF        ; Load B with 255 as a simple delay counter
+delay_loop:
+    djnz delay_loop      ; Decrement B and loop until B = 0
+    ret
