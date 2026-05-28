@@ -1,12 +1,10 @@
-# tec-memR
+#  Memristors + phase-coded (Lissajous) computing
+- from Octave/MATLAB simulations to Z80-controlled hardware, with an upgrade path to photonics.
 
-**Memristors + phase-coded (Lissajous) computing** — from Octave/MATLAB simulations to Z80-controlled hardware, with an upgrade path to photonics.
-
-> **Core principle:** **Phase = Weight, Interference = Computation**.
+**Core principle:** **Phase = Weight, Interference = Computation**.
 
 ---
 
-## Start here
 
 - If you’re new: skim **Quick Navigation** below, then run `run_sim_windowed.m`.
 - If you want to build hardware first: read **Alternative Methods for Programmable Phase Shifting** (digital pots/varactors are easiest), then **Hardware Implementation Roadmap**.
